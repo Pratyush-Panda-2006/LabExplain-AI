@@ -16,7 +16,7 @@ class Settings:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
     SESSION_PIN: str = os.getenv("SESSION_PIN", "123456").strip()
     PORT: int = int(os.getenv("PORT", "8000"))
-    MODEL_NAME: str = "gemma2-9b-it"
+    MODEL_NAME: str = os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant")
 
     @classmethod
     def verify_session_pin(cls, provided_pin: str) -> bool:
