@@ -15,8 +15,17 @@ from config import settings
 
 logger = logging.getLogger("labexplain.llm")
 
-# Primary model identifier (Llama 3.1 8B Instant)
-MODEL_NAME = os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant")
+# Active Groq production models
+PRIMARY_MODELS = [
+    "llama-3.3-70b-versatile",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-120b",
+]
+
+MODEL_NAME = os.environ.get("GROQ_MODEL", PRIMARY_MODELS[0])
 
 # Lazy-loaded Groq client
 _client: Optional[Groq] = None
@@ -30,11 +39,15 @@ def get_groq_client() -> Groq:
     global _client
     api_key = settings.GROQ_API_KEY
     if not api_key:
+        settings.reload()
+        api_key = settings.GROQ_API_KEY
+
+    if not api_key:
         raise ValueError(
             "GROQ_API_KEY is not configured on this lab server. "
-            "Please check the .env file or set GROQ_API_KEY in your environment."
+            "Please add your key to the .env file or set GROQ_API_KEY in your environment."
         )
-    if _client is None:
+    if _client is None or getattr(_client, "api_key", None) != api_key:
         _client = Groq(api_key=api_key)
     return _client
 
@@ -90,12 +103,12 @@ Follow the structured output format strictly (Overview, Line-by-Line Breakdown w
     try:
         client = get_groq_client()
         primary_model = getattr(settings, "MODEL_NAME", None) or MODEL_NAME
-        fallback_model = "llama-3.1-8b-instant"
 
-        # Prioritize primary model; fallback to llama-3.1-8b-instant if primary encounters decommissioned error
+        # Prioritize primary configured model; fallback through PRIMARY_MODELS if 404/400 occurs
         models_to_try = [primary_model]
-        if fallback_model not in models_to_try:
-            models_to_try.append(fallback_model)
+        for m in PRIMARY_MODELS:
+            if m not in models_to_try:
+                models_to_try.append(m)
 
         last_api_error = None
 
@@ -116,15 +129,26 @@ Follow the structured output format strictly (Overview, Line-by-Line Breakdown w
                 if not explanation:
                     raise RuntimeError("The model returned an empty response. Please try again.")
 
+                # Cache working model to avoid repeated fallback retries on subsequent requests
+                if current_model != models_to_try[0]:
+                    logger.info(f"Promoting working model '{current_model}' as active model.")
+                    settings.MODEL_NAME = current_model
+
                 return explanation.strip()
 
             except APIStatusError as exc:
                 err_msg = str(getattr(exc, "message", exc)).lower()
-                # If model is decommissioned or not found, try the next model in fallback list
-                if ("decommissioned" in err_msg or "model_not_found" in err_msg or exc.status_code == 400) and current_model != fallback_model:
+                # If model returned 404 (not found), decommissioned, or 400 bad request, try next model in PRIMARY_MODELS
+                is_model_err = (
+                    exc.status_code in (404, 400)
+                    or "not_found" in err_msg
+                    or "does not exist" in err_msg
+                    or "decommissioned" in err_msg
+                )
+                if is_model_err and current_model != models_to_try[-1]:
                     logger.warning(
                         f"Model '{current_model}' unavailable ({exc.status_code}): {exc.message}. "
-                        f"Falling back to '{fallback_model}'..."
+                        "Attempting fallback to next active production model..."
                     )
                     last_api_error = exc
                     continue

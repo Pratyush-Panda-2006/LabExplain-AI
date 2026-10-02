@@ -547,12 +547,15 @@
     /* ==========================================================================
        EXPLANATION MODAL / ACCORDION OVERLAY
        ========================================================================== */
+    /* ==========================================================================
+       EXPLANATION MODAL / ACCORDION OVERLAY (Dawn-Glass Aesthetic)
+       ========================================================================== */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(8, 10, 15, 0.72);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(8, 10, 15, 0.76);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       z-index: 1000;
       display: flex;
       align-items: center;
@@ -560,7 +563,7 @@
       padding: 1.5rem;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .modal-overlay.open {
@@ -569,199 +572,317 @@
     }
 
     .modal-card {
-      width: 100%;
-      max-width: 840px;
-      max-height: 84vh;
-      background: rgba(30, 30, 33, 0.94);
-      backdrop-filter: blur(36px) saturate(120%);
-      -webkit-backdrop-filter: blur(36px) saturate(120%);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 24px;
-      box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.75),
-                  0 0 45px rgba(99, 102, 241, 0.15),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      width: 92vw;
+      max-width: 780px;
+      max-height: 85vh;
+      background: rgba(18, 20, 24, 0.78);
+      backdrop-filter: blur(28px) saturate(140%);
+      -webkit-backdrop-filter: blur(28px) saturate(140%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transform: translateY(24px) scale(0.97);
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 28px 32px 30px 32px;
+      opacity: 0;
+      transform: scale(0.96) translateY(12px);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .modal-overlay.open .modal-card {
-      transform: translateY(0) scale(1);
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
 
     .modal-header {
-      padding: 1.25rem 1.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-      background: rgba(255, 255, 255, 0.03);
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      flex-shrink: 0;
     }
 
     .modal-title-wrap {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 12px;
     }
 
     .modal-badge {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #06b6d4, #6366f1);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
+      flex-shrink: 0;
     }
 
     .modal-title {
-      font-size: 1.15rem;
-      font-weight: 650;
-      color: #ffffff;
+      font-size: 17px;
+      font-weight: 600;
+      color: #FFFFFF;
       letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.25;
     }
 
     .modal-title-sub {
-      font-size: 0.78rem;
-      color: #94a3b8;
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 2px;
+      font-weight: 450;
+      letter-spacing: 0.01em;
     }
 
     .modal-actions {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 10px;
     }
 
     .modal-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 0.4rem 0.8rem;
-      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #E2E8F0;
+      border-radius: 9px;
+      padding: 7px 13px;
+      font-size: 12px;
       font-weight: 550;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      transition: all 0.2s ease;
+      gap: 6px;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
     }
 
     .modal-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.16);
       color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .modal-btn:active {
+      transform: translateY(0);
     }
 
     .modal-close {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: #94A3B8;
       width: 32px;
       height: 32px;
-      border-radius: 8px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 1.25rem;
-      transition: all 0.2s ease;
+      font-size: 16px;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
     }
 
     .modal-close:hover {
-      background: rgba(255, 255, 255, 0.10);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      transform: scale(1.05);
     }
 
+    .modal-close:active {
+      transform: scale(0.96);
+    }
+
+    /* Modal Body with smooth custom scrollbar */
     .modal-body {
-      padding: 1.75rem;
+      padding: 0 4px 0 0;
       overflow-y: auto;
       flex: 1;
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .modal-body h3 {
-      font-size: 1.1rem;
-      font-weight: 650;
-      color: #34d399;
-      margin-top: 1.25rem;
-      margin-bottom: 0.5rem;
+    .modal-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .modal-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .modal-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+    }
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    /* Content Blocks: Overview Section */
+    .overview-callout, .modal-body .section-overview {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 16px 18px;
+      color: #CBD5E1;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .overview-callout-title {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      letter-spacing: -0.015em;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #38bdf8;
+      margin-bottom: 6px;
     }
 
-    .modal-body h3:first-child {
-      margin-top: 0;
+    /* Code Line Cards */
+    .code-lines-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .code-line-card, .modal-body ul li {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      margin-bottom: 14px;
+      padding: 16px 20px;
+      list-style: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .code-line-card:hover, .modal-body ul li:hover {
+      background: rgba(255, 255, 255, 0.035);
+      border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    .line-code-pill, .modal-body code.line-code-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+
+    .line-what {
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      color: #CBD5E1;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .line-what strong, .modal-body strong {
+      color: #F8FAFC;
+      font-weight: 600;
+    }
+
+    .line-gotchas {
+      border-left: 2px solid #F59E0B;
+      background: rgba(245, 158, 11, 0.04);
+      padding: 8px 12px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: #94A3B8;
+      line-height: 1.6;
+    }
+
+    .line-gotchas strong {
+      color: #FBBF24;
+      font-weight: 600;
+    }
+
+    /* Tutor Takeaway Footer Card */
+    .takeaway-card, .modal-body .section-takeaway {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(245, 158, 11, 0.08));
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 14px;
+      padding: 16px 20px;
+      color: #E2E8F0;
+      font-size: 13.5px;
+      line-height: 1.6;
+      margin-top: 6px;
+    }
+
+    .takeaway-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 650;
+      color: #FBBF24;
+      margin-bottom: 6px;
+    }
+
+    /* Modal Typography Fallbacks */
+    .modal-body h3 {
+      font-size: 14px;
+      font-weight: 650;
+      color: #F8FAFC;
+      margin: 10px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
 
     .modal-body p {
-      margin-bottom: 0.75rem;
-      color: #cbd5e1;
+      margin: 0 0 8px 0;
+      color: #CBD5E1;
+      font-size: 13.5px;
+      line-height: 1.6;
     }
 
-    .modal-body ul {
-      list-style-type: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-      margin: 0.75rem 0;
+    .modal-body p:last-child {
+      margin-bottom: 0;
     }
 
-    .modal-body li {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.10);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      color: #cbd5e1;
-    }
-
-    .modal-body li strong {
-      color: #f8fafc;
-    }
-
-    .modal-body code {
+    .modal-body code:not(.line-code-pill) {
       font-family: var(--font-mono);
-      background: rgba(11, 17, 32, 0.85);
+      background: rgba(0, 0, 0, 0.35);
       color: #38bdf8;
-      padding: 0.2rem 0.45rem;
+      padding: 2px 6px;
       border-radius: 5px;
-      font-size: 0.9em;
-      border: 1px solid rgba(56, 189, 248, 0.22);
+      font-size: 0.88em;
+      border: 1px solid rgba(56, 189, 248, 0.18);
     }
 
     .modal-body pre {
-      background: rgba(11, 17, 32, 0.85);
-      padding: 1rem;
+      background: rgba(0, 0, 0, 0.40);
+      padding: 12px 16px;
       border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       overflow-x: auto;
-      margin: 0.75rem 0;
-    }
-
-    .modal-body pre code {
-      background: transparent;
-      border: none;
-      padding: 0;
-      color: #e2e8f0;
+      margin: 8px 0;
     }
 
     .modal-error {
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.35);
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.25);
       color: #fecdd3;
-      padding: 1.1rem 1.4rem;
-      border-radius: 12px;
+      padding: 16px 20px;
+      border-radius: 14px;
       display: flex;
       align-items: flex-start;
-      gap: 0.75rem;
-      font-size: 0.92rem;
+      gap: 12px;
+      font-size: 13.5px;
+      line-height: 1.55;
     }
 
     /* Toast Notification */
@@ -1161,7 +1282,12 @@
             </svg>
             <span>Copy Notes</span>
           </button>
-          <button class="modal-close" id="modalCloseBtn" type="button" aria-label="Close explanation dialog">&times;</button>
+          <button class="modal-close" id="modalCloseBtn" type="button" aria-label="Close explanation dialog" title="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </div>
       <div class="modal-body" id="modalBody">
@@ -1325,9 +1451,149 @@
       setTimeout(() => toast.classList.remove('show'), 2600);
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatExplanationHtml(rawMarkdown) {
+      if (!rawMarkdown) return '';
+
+      try {
+        const rawHtml = (typeof marked !== 'undefined') ? marked.parse(rawMarkdown) : `<pre>${rawMarkdown}</pre>`;
+        const temp = document.createElement('div');
+        temp.innerHTML = rawHtml;
+
+        // 1. Format Overview Callout Box & Tutor Takeaway
+        const headings = Array.from(temp.querySelectorAll('h1, h2, h3, h4'));
+        headings.forEach(h => {
+          const text = h.textContent.trim().toLowerCase();
+
+          if (text.includes('overview')) {
+            const overviewBox = document.createElement('div');
+            overviewBox.className = 'overview-callout';
+
+            let overviewHtml = '';
+            let next = h.nextElementSibling;
+            while (next && !['H1', 'H2', 'H3', 'H4', 'UL', 'OL'].includes(next.tagName)) {
+              overviewHtml += next.outerHTML;
+              const toRemove = next;
+              next = next.nextElementSibling;
+              toRemove.remove();
+            }
+
+            overviewBox.innerHTML = `
+              <div class="overview-callout-title">📝 Snippet Overview</div>
+              <div>${overviewHtml || '<p>High-level pedagogical summary of the code snippet.</p>'}</div>
+            `;
+            h.replaceWith(overviewBox);
+
+          } else if (text.includes('takeaway')) {
+            const takeawayBox = document.createElement('div');
+            takeawayBox.className = 'takeaway-card';
+
+            let takeawayHtml = '';
+            let next = h.nextElementSibling;
+            while (next && !['H1', 'H2', 'H3', 'H4'].includes(next.tagName)) {
+              takeawayHtml += next.outerHTML;
+              const toRemove = next;
+              next = next.nextElementSibling;
+              toRemove.remove();
+            }
+
+            takeawayBox.innerHTML = `
+              <div class="takeaway-card-title">💡 Tutor's Lab Takeaway</div>
+              <div>${takeawayHtml}</div>
+            `;
+            h.replaceWith(takeawayBox);
+
+          } else if (text.includes('line-by-line') || text.includes('breakdown')) {
+            h.remove();
+          }
+        });
+
+        // 2. Format Code Line Cards
+        const lists = Array.from(temp.querySelectorAll('ul, ol'));
+        lists.forEach(list => {
+          const lis = Array.from(list.querySelectorAll('li'));
+          if (lis.length === 0) return;
+
+          const container = document.createElement('div');
+          container.className = 'code-lines-container';
+
+          lis.forEach(li => {
+            const card = document.createElement('div');
+            card.className = 'code-line-card';
+
+            let html = li.innerHTML.trim();
+
+            // Extract code
+            let codeText = '';
+            const codeEl = li.querySelector('code');
+            if (codeEl) {
+              codeText = codeEl.textContent.trim();
+              codeEl.remove();
+              html = li.innerHTML.trim();
+            } else {
+              const codeMatch = html.match(/`([^`]+)`/);
+              if (codeMatch) {
+                codeText = codeMatch[1];
+                html = html.replace(/`([^`]+)`/, '').trim();
+              }
+            }
+
+            // Remove leading "Line: " / "Line 1: " prefixes
+            html = html.replace(/^(?:<strong>|\*\*)?Line(?:\s*\d+)?:?(?:<\/strong>|\*\*)?\s*:?/i, '').trim();
+
+            // Detect Gotchas / Why it matters section
+            let whatHtml = html;
+            let gotchasHtml = '';
+
+            const gotchasRegex = /(?:<strong>|\*\*)(Why it matters[^\*<]*|Gotchas[^\*<]*)(?:<\/strong>|\*\*):?\s*([\s\S]*)/i;
+            const gotchasMatch = html.match(gotchasRegex);
+
+            if (gotchasMatch) {
+              whatHtml = html.substring(0, gotchasMatch.index).trim();
+              const label = gotchasMatch[1].trim();
+              const rest = gotchasMatch[2].trim();
+              gotchasHtml = `<div class="line-gotchas"><strong>${escapeHtml(label)}:</strong> ${rest}</div>`;
+            }
+
+            // Clean leading "What it does:"
+            whatHtml = whatHtml.replace(/^(?:<strong>|\*\*)?What it does:?(?:<\/strong>|\*\*)?\s*:?/i, '').trim();
+            if (whatHtml.startsWith(':')) {
+              whatHtml = whatHtml.substring(1).trim();
+            }
+
+            let cardInner = '';
+            if (codeText) {
+              cardInner += `<div class="line-code-pill">${escapeHtml(codeText)}</div>`;
+            }
+            if (whatHtml) {
+              cardInner += `<div class="line-what"><strong>What it does:</strong> ${whatHtml}</div>`;
+            }
+            if (gotchasHtml) {
+              cardInner += gotchasHtml;
+            }
+
+            card.innerHTML = cardInner || html;
+            container.appendChild(card);
+          });
+
+          list.replaceWith(container);
+        });
+
+        return temp.innerHTML;
+      } catch (err) {
+        console.warn('Custom markdown format fallback:', err);
+        return (typeof marked !== 'undefined') ? marked.parse(rawMarkdown) : rawMarkdown;
+      }
+    }
+
     // Modal helpers
     function openModal(contentHtml) {
       modalBody.innerHTML = contentHtml;
+      modalBody.scrollTop = 0;
       modalOverlay.classList.add('open');
     }
 
@@ -1434,14 +1700,8 @@
 
         lastExplanationMarkdown = data.explanation;
 
-        // Render Markdown safely
-        let renderedHtml = '';
-        if (typeof marked !== 'undefined') {
-          renderedHtml = marked.parse(data.explanation);
-        } else {
-          renderedHtml = `<pre style="white-space: pre-wrap;">${data.explanation}</pre>`;
-        }
-
+        // Render Markdown into sleek dawn-glass structured cards
+        const renderedHtml = formatExplanationHtml(data.explanation);
         openModal(renderedHtml);
 
       } catch (err) {

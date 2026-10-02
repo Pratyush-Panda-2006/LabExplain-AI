@@ -119,3 +119,33 @@ def test_decommissioned_model_fallback():
             result = explain_snippet("print('hello')", "python")
             assert result == "Fallback explanation success"
             assert mock_client.chat.completions.create.call_count == 2
+
+
+def test_model_404_fallback():
+    """Verify that a 404 model error triggers fallback to the next model in PRIMARY_MODELS."""
+    import httpx
+    from groq import APIStatusError
+    from services.llm_service import explain_snippet
+
+    dummy_request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    dummy_response = httpx.Response(404, request=dummy_request)
+    not_found_err = APIStatusError(
+        message="Model `unavailable-model` does not exist.",
+        response=dummy_response,
+        body={"error": {"code": "model_not_found"}},
+    )
+
+    with patch("services.llm_service.get_groq_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_choice = MagicMock()
+        mock_choice.message.content = "Fallback from 404 success"
+        mock_res = MagicMock()
+        mock_res.choices = [mock_choice]
+
+        mock_client.chat.completions.create.side_effect = [not_found_err, mock_res]
+        mock_get_client.return_value = mock_client
+
+        with patch.object(settings, "MODEL_NAME", "unavailable-model"):
+            result = explain_snippet("x = 10", "python")
+            assert result == "Fallback from 404 success"
+            assert mock_client.chat.completions.create.call_count == 2
