@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LabExplain — Zero-Login Peer Code Tutor Powered by Gemma</title>
+  <meta name="description" content="Instant line-by-line syntax explanation on public lab computers with zero account logins.">
+
+  <!-- Google Fonts: Inter variable & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Marked.js for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & RESPONSIVE GEOMETRY (1560 × 1008 Reference Frame)
+       ========================================================================== */
+    :root {
+      --u: min(0.06410256vw, 0.12400794vh);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0a0d12;
+      font-family: var(--font-sans);
+      color: #ffffff;
+      position: relative;
+    }
+
+    /* Background Video */
+    .bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+
+    /* Ambient Vignette Layer */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 45%, rgba(10, 13, 18, 0.25) 0%, rgba(10, 13, 18, 0.72) 100%);
+    }
+
+    /* Stage Container: Centered viewport stage */
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: calc(1560 * var(--u));
+      min-height: 100vh;
+      margin: 0 auto;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      box-sizing: border-box;
+    }
+
+    .stage > * {
+      pointer-events: auto;
+    }
+
+    /* ==========================================================================
+       ENTRANCE ANIMATIONS (.anim on <html>)
+       ========================================================================== */
+    @keyframes navEnter {
+      from { opacity: 0; transform: translateY(-24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroEnter {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardEnter {
+      from { opacity: 0; transform: translateY(28px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    html.anim .brand {
+      opacity: 0;
+      animation: navEnter 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    }
+    html.anim .hero-title {
+      opacity: 0;
+      animation: heroEnter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+    }
+    html.anim .hero-subtext {
+      opacity: 0;
+      animation: heroEnter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+    }
+    html.anim .card {
+      opacity: 0;
+      animation: cardEnter 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+    }
+
+    /* ==========================================================================
+       BRAND MARK (Pinned strictly to top-left corner)
+       ========================================================================== */
+    .brand {
+      position: fixed;
+      top: max(24px, env(safe-area-inset-top));
+      left: max(28px, env(safe-area-inset-left));
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .brand-mark {
+      width: 34px;
+      min-width: 28px;
+      height: 34px;
+      min-height: 28px;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(156, 134, 206, 0.45));
+    }
+
+    .brand-text {
+      font-size: clamp(16px, 1.6vw, 20px);
+      font-weight: 650;
+      letter-spacing: -0.025em;
+      color: #ffffff;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ==========================================================================
+       HERO HEADLINE & SUBTEXT (Prominent & Cinematic)
+       ========================================================================== */
+    .hero-title {
+      position: static;
+      text-align: center;
+      font-size: clamp(34px, 4.2vw, 52px);
+      font-weight: 420;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      color: #ffffff;
+      text-shadow: 0 calc(2 * var(--u)) calc(22 * var(--u)) rgba(0, 0, 0, 0.35);
+      user-select: none;
+      margin: 0;
+    }
+
+    .hero-subtext, p.subtext {
+      text-align: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      max-width: 680px;
+      margin-top: 14px;
+      margin-bottom: 38px; /* Adds clear separation from the card */
+      line-height: 1.6;
+      color: rgba(226, 232, 240, 0.8);
+      font-size: clamp(14px, 1.25vw, 17px);
+      font-weight: 400;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+      user-select: none;
+      width: 90%;
+    }
+
+    /* ==========================================================================
+       COMPOSER CARD (Expanded Prominence: 840u / 220u / 28px 32px 24px 32px)
+       ========================================================================== */
+    .card {
+      position: relative;
+      margin: 0 auto;
+      width: clamp(740px, 58vw, 860px);
+      min-height: max(220px, calc(220 * var(--u)));
+      height: auto;
+      border-radius: 28px;
+      padding: 28px 32px 24px 32px;
+      background: rgba(41, 41, 43, 0.955);
+      backdrop-filter: blur(28px) saturate(112%);
+      -webkit-backdrop-filter: blur(28px) saturate(112%);
+      border: 1px solid rgba(214, 228, 255, 0.14);
+      box-shadow: 0 35px 80px rgba(0, 0, 0, 0.55),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.12);
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .card:focus-within {
+      border-color: rgba(251, 188, 148, 0.35);
+      box-shadow: 0 35px 85px rgba(0, 0, 0, 0.60),
+                  0 0 35px rgba(244, 157, 112, 0.14),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.16);
+    }
+
+    /* Code Input Textarea (Enlarged breathing room) */
+    .card-textarea {
+      width: 100%;
+      height: calc(100% - 55px);
+      min-height: 110px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      color: #f1f5f9;
+      font-family: var(--font-mono);
+      font-size: clamp(13px, 1.15vw, 15px);
+      line-height: 1.6;
+      white-space: pre;
+      tab-size: 4;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .card-textarea::placeholder {
+      color: rgba(241, 245, 249, 0.42);
+      font-family: var(--font-mono);
+    }
+
+    .card-textarea::-webkit-scrollbar {
+      width: 4px;
+    }
+    .card-textarea::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+    }
+
+    /* ==========================================================================
+       TOOLBAR STRIP (.tools inside card)
+       ========================================================================== */
+    .tools {
+      width: 100%;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      margin-top: 16px;
+      gap: 12px;
+    }
+
+    /* Left: Three Chips in 36px strip */
+    .chips-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+    }
+
+    .chip {
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.075);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      padding: 0 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .chip-interactive {
+      cursor: pointer;
+    }
+
+    .chip-interactive:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    /* PIN input chip styling */
+    .chip-pin {
+      position: relative;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .pin-input-field {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      width: 100px;
+      letter-spacing: 0.08em;
+    }
+
+    .pin-input-field::placeholder {
+      color: rgba(255, 255, 255, 0.38);
+      letter-spacing: 0.04em;
+    }
+
+    /* PIN Shake Animation on Empty Submission */
+    @keyframes chipShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    .chip-pin.shake {
+      animation: chipShake 0.4s ease-in-out;
+      border-color: rgba(244, 63, 94, 0.8) !important;
+      background: rgba(244, 63, 94, 0.15) !important;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
+    }
+
+    /* ==========================================================================
+       CUSTOM GLASSMORPHIC LANGUAGE DROPDOWN
+       ========================================================================== */
+    .chip-custom-select {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+    }
+
+    .chip-custom-select:hover,
+    .chip-custom-select.open {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+    }
+
+    .lang-selected-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .chevron-icon {
+      width: 10px;
+      height: 6px;
+      color: #98999C;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+      display: block;
+      margin-left: 2px;
+    }
+
+    .chip-custom-select:hover .chevron-icon,
+    .chip-custom-select.open .chevron-icon {
+      color: #ffffff;
+    }
+
+    .chip-custom-select.open .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Floating Dropdown Menu */
+    .custom-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 140px;
+      z-index: 50;
+      background: rgba(26, 26, 30, 0.92);
+      backdrop-filter: blur(20px) saturate(120%);
+      -webkit-backdrop-filter: blur(20px) saturate(120%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chip-custom-select.open .custom-dropdown-menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Dropdown Items */
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 13px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 450;
+      color: #98999C;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+
+    .dropdown-item.selected {
+      color: #34d399;
+      font-weight: 550;
+    }
+
+    .dropdown-item .item-check {
+      font-size: 11px;
+      opacity: 0;
+      color: #34d399;
+      margin-left: 8px;
+      transition: opacity 0.15s ease;
+    }
+
+    .dropdown-item.selected .item-check {
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       RIGHT CLUSTER (.right) — MODEL + CLEAR + SCALED SEND BUTTON
+       ========================================================================== */
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-left: auto;
+      position: relative;
+    }
+
+    /* Model: Gemma 2 9B + spark icon */
+    .model-tag {
+      font-size: 12px;
+      font-weight: 400;
+      color: #98999C;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .model-spark {
+      width: 13px;
+      height: 13px;
+      fill: #98999C;
+      display: block;
+    }
+
+    /* Clear / Attach icon */
+    .btn-attach {
+      color: #A9AAAD;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .btn-attach svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+      stroke: currentColor;
+    }
+
+    .btn-attach:hover {
+      color: #ffffff;
+      transform: scale(1.08);
+    }
+
+    /* Send Circle: Scaled to 42px × 42px with larger up-arrow */
+    .send {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(163deg, #FBBC94 0%, #F49D70 46%, #E88654 100%);
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(232, 134, 84, 0.45);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .send svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .send:hover:not(:disabled) {
+      transform: translateY(-1.5px) scale(1.05);
+      box-shadow: 0 6px 22px rgba(232, 134, 84, 0.65);
+    }
+
+    .send:active:not(:disabled) {
+      transform: translateY(0) scale(0.96);
+    }
+
+    .send:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .send.loading svg {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       EXPLANATION MODAL / ACCORDION OVERLAY
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 10, 15, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 840px;
+      max-height: 84vh;
+      background: rgba(30, 30, 33, 0.94);
+      backdrop-filter: blur(36px) saturate(120%);
+      -webkit-backdrop-filter: blur(36px) saturate(120%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 24px;
+      box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.75),
+                  0 0 45px rgba(99, 102, 241, 0.15),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #06b6d4, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 650;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-title-sub {
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .modal-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 550;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .modal-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.10);
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 1.75rem;
+      overflow-y: auto;
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+    }
+
+    .modal-body h3 {
+      font-size: 1.1rem;
+      font-weight: 650;
+      color: #34d399;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.015em;
+    }
+
+    .modal-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .modal-body p {
+      margin-bottom: 0.75rem;
+      color: #cbd5e1;
+    }
+
+    .modal-body ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin: 0.75rem 0;
+    }
+
+    .modal-body li {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      color: #cbd5e1;
+    }
+
+    .modal-body li strong {
+      color: #f8fafc;
+    }
+
+    .modal-body code {
+      font-family: var(--font-mono);
+      background: rgba(11, 17, 32, 0.85);
+      color: #38bdf8;
+      padding: 0.2rem 0.45rem;
+      border-radius: 5px;
+      font-size: 0.9em;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+    }
+
+    .modal-body pre {
+      background: rgba(11, 17, 32, 0.85);
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+
+    .modal-body pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #e2e8f0;
+    }
+
+    .modal-error {
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fecdd3;
+      padding: 1.1rem 1.4rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 0.75rem 1.4rem;
+      border-radius: 999px;
+      border: 1px solid rgba(251, 188, 148, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      font-size: 0.88rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 2000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINTS (TABLET & PHONE SPECIFICATIONS)
+       ========================================================================== */
+
+    /* TABLET (600–1180 wide AND height ≥ 600) */
+    @media (min-width: 600px) and (max-width: 1180px) and (min-height: 600px) {
+      body {
+        overflow-y: auto;
+      }
+      .stage {
+        width: 100%;
+        max-width: 860px;
+        height: auto;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+      }
+      .hero-title {
+        position: static;
+        font-size: clamp(32px, 4.5vw, 44px);
+      }
+      .hero-subtext, p.subtext {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 680px;
+        font-size: clamp(14px, 1.4vw, 16px);
+        margin-top: 14px;
+        margin-bottom: 38px;
+      }
+      .card {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 860px;
+        min-height: 220px;
+        border-radius: 28px;
+        padding: 26px 28px 22px 28px;
+      }
+      .card-textarea {
+        font-size: 14px;
+        min-height: 110px;
+      }
+      .tools {
+        height: 42px;
+      }
+      .chip {
+        height: 36px;
+        font-size: 12px;
+      }
+      .pin-input-field {
+        font-size: 12px;
+        width: 95px;
+      }
+      .lang-selected-label {
+        font-size: 12px;
+      }
+      .dropdown-item {
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+      .right {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+        gap: 16px;
+      }
+      .model-tag {
+        font-size: 12px;
+      }
+      .btn-attach {
+        width: 24px;
+        height: 24px;
+      }
+      .btn-attach svg {
+        width: 20px;
+        height: 20px;
+      }
+      .send {
+        width: 42px;
+        height: 42px;
+      }
+      .send svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    /* PHONE (max-width 599, or height < 600 with width ≤ 1180) */
+    @media (max-width: 599px), (max-height: 599px) and (max-width: 1180px) {
+      body {
+        overflow-y: auto;
+      }
+      .stage {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+      }
+      .hero-title {
+        position: static;
+        font-size: clamp(26px, 6vw, 32px);
+        line-height: 1.2;
+      }
+      .hero-subtext, p.subtext {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 680px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        margin-top: 14px;
+        margin-bottom: 28px;
+      }
+      .card {
+        position: static;
+        transform: none;
+        width: 100%;
+        min-height: 220px;
+        border-radius: 22px;
+        padding: 20px 18px 18px 18px;
+      }
+      .card-textarea {
+        font-size: 13.5px;
+        min-height: 105px;
+      }
+      .tools {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        height: auto;
+      }
+      .chips-row {
+        flex-wrap: wrap;
+        height: auto;
+        gap: 6px;
+      }
+      .chip {
+        height: 34px;
+        font-size: 11.5px;
+        padding: 0 10px;
+        border-radius: 8px;
+      }
+      .pin-input-field {
+        font-size: 11.5px;
+        width: 85px;
+      }
+      .lang-selected-label {
+        font-size: 11.5px;
+      }
+      .dropdown-item {
+        font-size: 11.5px;
+        padding: 7px 10px;
+      }
+      .right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .model-tag {
+        font-size: 11.5px;
+      }
+      .btn-attach {
+        width: 22px;
+        height: 22px;
+      }
+      .btn-attach svg {
+        width: 18px;
+        height: 18px;
+      }
+      .send {
+        margin-left: auto;
+        width: 42px;
+        height: 42px;
+      }
+      .send svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Full-Viewport Background Video -->
+  <video class="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_124724_bc041163-d651-425f-aea3-2acc1efc2c96.mp4" type="video/mp4">
+  </video>
+
+  <!-- Ambient Vignette Layer -->
+  <div class="vignette"></div>
+
+  <!-- BRAND MARK (Pinned strictly to top-left corner) -->
+  <a class="brand" id="brandBtn" title="LabExplain — Zero-Login AI Code Tutor" href="/">
+    <!-- SVG Mark 34×34: circle #9C86CE r=17, circle #FFFFFF r=8.6, inner circle #151519 r=3.7 -->
+    <svg class="brand-mark" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="17" cy="17" r="17" fill="#9C86CE"/>
+      <circle cx="17" cy="17" r="8.6" fill="#FFFFFF"/>
+      <circle cx="17" cy="17" r="3.7" fill="#151519"/>
+    </svg>
+    <span class="brand-text">LabExplain</span>
+  </a>
+
+  <!-- Responsive 1560 × 1008 Stage -->
+  <div class="stage">
+
+    <!-- HERO HEADLINE -->
+    <h1 class="hero-title">Your zero-login lab teaching assistant.</h1>
+
+    <!-- HERO SUBTEXT -->
+    <p class="hero-subtext subtext">
+      Stuck on tricky syntax while your teacher moves ahead? Skip scanning QR codes or exposing personal accounts on shared lab PCs—enter your session PIN and get instant line-by-line breakdowns.
+    </p>
+
+    <!-- COMPOSER (The Code Input Card: Expanded 840u / 220u / 28px 32px 24px 32px) -->
+    <div class="card" role="region" aria-label="Code Input Studio">
+      <!-- Code Editor Textarea -->
+      <textarea 
+        id="codeInput" 
+        class="card-textarea" 
+        placeholder="Paste lab code (e.g. with open('file.txt', 'r') as f: data = f.read())..."
+        spellcheck="false"
+        aria-label="Student Code Input"
+      ></textarea>
+
+      <!-- Bottom Toolbar Strip (.tools inside card) -->
+      <div class="tools">
+        <!-- Left: Three Chips in 36px strip -->
+        <div class="chips-row">
+          <!-- Chip 1: Blank Interactive PIN Input inside 36px pill (radius 10px) -->
+          <div class="chip chip-pin" id="pinChip" title="Enter your 6-digit university lab session PIN">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input 
+              type="text" 
+              id="pinInput" 
+              class="pin-input-field" 
+              maxlength="6" 
+              value="" 
+              placeholder="PIN: ______" 
+              autocomplete="off" 
+              spellcheck="false"
+              aria-label="6-digit Lab Session PIN"
+            />
+          </div>
+
+          <!-- Chip 2: Custom Accessible Glassmorphic Language Selector Dropdown -->
+          <div 
+            class="chip chip-custom-select" 
+            id="langChip" 
+            title="Click to select programming language" 
+            tabindex="0" 
+            role="combobox" 
+            aria-haspopup="listbox" 
+            aria-expanded="false"
+            aria-label="Select programming language"
+          >
+            <!-- Left: <> code icon (15px) -->
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+
+            <!-- Center: Selected language label (12px) -->
+            <span class="lang-selected-label" id="currentLangLabel">Python 3</span>
+
+            <!-- Right: Subtle animated SVG chevron that rotates 180deg when open -->
+            <svg class="chevron-icon" viewBox="0 0 9 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 1.25L4.5 4.75L8 1.25" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+            <!-- Custom Floating Dropdown Menu -->
+            <div class="custom-dropdown-menu" id="langDropdownMenu" role="listbox" aria-label="Programming languages">
+              <div class="dropdown-item selected" data-value="python" role="option" aria-selected="true">
+                <span>Python 3</span>
+                <span class="item-check">✓</span>
+              </div>
+              <div class="dropdown-item" data-value="c" role="option" aria-selected="false">
+                <span>C</span>
+                <span class="item-check">✓</span>
+              </div>
+              <div class="dropdown-item" data-value="cpp" role="option" aria-selected="false">
+                <span>C++</span>
+                <span class="item-check">✓</span>
+              </div>
+              <div class="dropdown-item" data-value="java" role="option" aria-selected="false">
+                <span>Java</span>
+                <span class="item-check">✓</span>
+              </div>
+              <div class="dropdown-item" data-value="javascript" role="option" aria-selected="false">
+                <span>JavaScript</span>
+                <span class="item-check">✓</span>
+              </div>
+              <div class="dropdown-item" data-value="sql" role="option" aria-selected="false">
+                <span>SQL</span>
+                <span class="item-check">✓</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chip 3: Line-by-Line Pedagogical Breakdown Mode -->
+          <div class="chip chip-interactive" id="modeChip" title="Pedagogical Tutor Mode">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            <span>Line-by-Line</span>
+          </div>
+        </div>
+
+        <!-- RIGHT CLUSTER (.right): MODEL + ATTACH + 42px SEND BUTTON -->
+        <div class="right">
+          <!-- Model: Gemma 2 9B (12px) -->
+          <div class="model-tag" title="Inference powered by Google Gemma 2 9B via Groq Cloud">
+            <!-- 4-point AI spark SVG -->
+            <svg class="model-spark" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/>
+            </svg>
+            <span>Gemma 2 9B</span>
+          </div>
+
+          <!-- Clear / Attach Icon (24px button, 20px SVG) -->
+          <button class="btn-attach" id="attachBtn" type="button" title="Load sample lab code or clear input" aria-label="Load sample snippet or clear editor">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
+
+          <!-- SEND Circle: Scaled to 42px × 42px circle with larger up-arrow -->
+          <button class="send" id="sendBtn" type="button" title="Explain code snippet (Ctrl + Enter)" aria-label="Send code to Gemma 2">
+            <!-- White filled UP-arrow SVG inside, flex-centered -->
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 2L7 12M7 2L2.5 6.5M7 2L11.5 6.5" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EXPLANATION MODAL / ACCORDION OVERLAY -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-badge">🎓</div>
+          <div>
+            <h2 class="modal-title" id="modalTitle">Gemma 2 Line-by-Line Breakdown</h2>
+            <div class="modal-title-sub">Pedagogical Lab Tutor • gemma2-9b-it</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn" id="copyNotesBtn" type="button" title="Copy markdown breakdown">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copy Notes</span>
+          </button>
+          <button class="modal-close" id="modalCloseBtn" type="button" aria-label="Close explanation dialog">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Content inserted dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Alert -->
+  <div class="toast" id="toast" role="status">Copied to clipboard!</div>
+
+  <!-- CLIENT LOGIC & API TRIGGER -->
+  <script>
+    // 1. Entrance Animation Sequencer: .anim on <html> with 2600ms cleanup
+    document.documentElement.classList.add('anim');
+    setTimeout(() => {
+      document.documentElement.classList.remove('anim');
+    }, 2600);
+
+    // DOM Elements
+    const codeInput = document.getElementById('codeInput');
+    const pinInput = document.getElementById('pinInput');
+    const pinChip = document.getElementById('pinChip');
+    const langChip = document.getElementById('langChip');
+    const currentLangLabel = document.getElementById('currentLangLabel');
+    const langDropdownMenu = document.getElementById('langDropdownMenu');
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    const modeChip = document.getElementById('modeChip');
+    const attachBtn = document.getElementById('attachBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalBody = document.getElementById('modalBody');
+    const copyNotesBtn = document.getElementById('copyNotesBtn');
+    const toast = document.getElementById('toast');
+
+    // Active selected language state (defaults to 'python')
+    let selectedLanguage = 'python';
+
+    // Toggle custom dropdown
+    function toggleDropdown(e) {
+      if (e) e.stopPropagation();
+      const isOpen = langChip.classList.contains('open');
+      if (isOpen) {
+        closeDropdown();
+      } else {
+        langChip.classList.add('open');
+        langChip.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeDropdown() {
+      langChip.classList.remove('open');
+      langChip.setAttribute('aria-expanded', 'false');
+    }
+
+    langChip.addEventListener('click', toggleDropdown);
+
+    // Keyboard accessibility for dropdown trigger
+    langChip.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleDropdown();
+      } else if (e.key === 'Escape') {
+        closeDropdown();
+      }
+    });
+
+    // Option selection handler
+    function setLanguage(val, labelText) {
+      selectedLanguage = val;
+      currentLangLabel.textContent = labelText;
+      dropdownItems.forEach((item) => {
+        const isMatch = item.dataset.value === val;
+        item.classList.toggle('selected', isMatch);
+        item.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+      });
+    }
+
+    dropdownItems.forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = item.dataset.value;
+        const labelText = item.querySelector('span').textContent;
+        setLanguage(val, labelText);
+        closeDropdown();
+        showToast(`Selected language: ${labelText}`);
+      });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!langChip.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+
+    // Sample Snippets mapped by language
+    const SAMPLES = [
+      {
+        lang: 'python',
+        label: 'Python 3',
+        code: `with open('sensor_logs.txt', 'r', encoding='utf-8') as file:\n    header = file.readline().strip()\n    readings = [float(line.split(',')[1]) for line in file if line.strip()]`
+      },
+      {
+        lang: 'c',
+        label: 'C',
+        code: `#include <stdio.h>\nvoid swap(int *a, int *b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}`
+      },
+      {
+        lang: 'cpp',
+        label: 'C++',
+        code: `#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> nums = {10, 20, 30};\n    for (const auto &n : nums) std::cout << n << "\\n";\n}`
+      },
+      {
+        lang: 'sql',
+        label: 'SQL',
+        code: `SELECT department_id, COUNT(*) AS student_count\nFROM enrollments\nGROUP BY department_id\nHAVING COUNT(*) > 15\nORDER BY student_count DESC;`
+      }
+    ];
+    let sampleIndex = 0;
+
+    // Paperclip / Clear button: loads sample or clears editor
+    attachBtn.addEventListener('click', () => {
+      if (codeInput.value.trim().length > 0) {
+        codeInput.value = '';
+        showToast('Editor cleared');
+        codeInput.focus();
+      } else {
+        const sample = SAMPLES[sampleIndex % SAMPLES.length];
+        sampleIndex++;
+        codeInput.value = sample.code;
+        setLanguage(sample.lang, sample.label);
+        showToast(`Loaded ${sample.label} lab example`);
+        codeInput.focus();
+      }
+    });
+
+    pinInput.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, ''); // Ensure numeric 6-digit PIN
+      e.target.value = val;
+      pinChip.classList.remove('shake');
+      if (val.length === 6) {
+        sessionStorage.setItem('labexplain_pin', val);
+      }
+    });
+
+    // Trigger PIN input shake when missing
+    function triggerPinShake() {
+      pinChip.classList.remove('shake');
+      void pinChip.offsetWidth; // Force CSS reflow
+      pinChip.classList.add('shake');
+      pinInput.focus();
+      showToast('⚠️ Please enter your 6-digit lab session PIN');
+    }
+
+    // Toast helper
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    // Modal helpers
+    function openModal(contentHtml) {
+      modalBody.innerHTML = contentHtml;
+      modalOverlay.classList.add('open');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('open');
+    }
+
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (modalOverlay.classList.contains('open')) {
+          closeModal();
+        } else if (langChip.classList.contains('open')) {
+          closeDropdown();
+        }
+      }
+    });
+
+    // Tab key support & Ctrl+Enter shortcut
+    codeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = codeInput.selectionStart;
+        const end = codeInput.selectionEnd;
+        codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
+        codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        sendSnippet();
+      }
+    });
+
+    let lastExplanationMarkdown = '';
+
+    // Copy notes button
+    copyNotesBtn.addEventListener('click', () => {
+      if (!lastExplanationMarkdown) return;
+      navigator.clipboard.writeText(lastExplanationMarkdown).then(() => {
+        showToast('📋 Lab explanation copied to clipboard!');
+      }).catch(() => {
+        showToast('Please copy manually');
+      });
+    });
+
+    // Send code to FastAPI backend: POST /api/explain
+    async function sendSnippet() {
+      const pin = pinInput.value.trim();
+      const code = codeInput.value.trim();
+      const language = selectedLanguage || 'python';
+
+      // 1. Mandatory Manual PIN Validation
+      if (!pin || pin.length < 6) {
+        triggerPinShake();
+        return;
+      }
+
+      // 2. Code snippet validation
+      if (!code) {
+        showToast('Please paste a code snippet first');
+        codeInput.focus();
+        return;
+      }
+
+      // Enter loading state
+      sendBtn.disabled = true;
+      sendBtn.classList.add('loading');
+      sendBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.3"/>
+          <path d="M12 2a10 10 0 0 1 10 10"/>
+        </svg>
+      `;
+
+      try {
+        const response = await fetch('/api/explain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin, code, language })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errMsg = data.detail || 'An error occurred during code analysis.';
+          if (response.status === 401) {
+            triggerPinShake();
+          }
+          openModal(`
+            <div class="modal-error">
+              <span style="font-size: 1.25rem;">⚠️</span>
+              <div>
+                <strong>Inference Notice (${response.status}):</strong>
+                <p style="margin-top: 0.35rem; color: #ffe4e6;">${errMsg}</p>
+                <small style="color: #fda4af;">Please check the active 6-digit lab session PIN.</small>
+              </div>
+            </div>
+          `);
+          return;
+        }
+
+        lastExplanationMarkdown = data.explanation;
+
+        // Render Markdown safely
+        let renderedHtml = '';
+        if (typeof marked !== 'undefined') {
+          renderedHtml = marked.parse(data.explanation);
+        } else {
+          renderedHtml = `<pre style="white-space: pre-wrap;">${data.explanation}</pre>`;
+        }
+
+        openModal(renderedHtml);
+
+      } catch (err) {
+        openModal(`
+          <div class="modal-error">
+            <span style="font-size: 1.25rem;">📡</span>
+            <div>
+              <strong>Network / Connection Notice:</strong>
+              <p style="margin-top: 0.35rem; color: #ffe4e6;">${err.message || 'Could not connect to LabExplain server.'}</p>
+            </div>
+          </div>
+        `);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.classList.remove('loading');
+        sendBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 2L7 12M7 2L2.5 6.5M7 2L11.5 6.5" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+      }
+    }
+
+    sendBtn.addEventListener('click', sendSnippet);
+  </script>
+</body>
+</html>
